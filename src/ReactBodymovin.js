@@ -1,36 +1,50 @@
-const React = require('react')
-var bodymovin;
-//Use Bodymovin Light
-if (typeof BODYMOVIN_EXPRESSION_SUPPORT === 'undefined' || BODYMOVIN_EXPRESSION_SUPPORT == null || BODYMOVIN_EXPRESSION_SUPPORT === false) {
-  bodymovin = require('bodymovin/build/player/bodymovin_light.min');
-//Use Bodymovin w/ expressions
-} else if (BODYMOVIN_EXPRESSION_SUPPORT === true){
-  bodymovin = require('bodymovin/build/player/bodymovin.min');
-}
+const PropTypes = require('prop-types');
+const React = require('react');
+const bodymovin = require('bodymovin/build/player/bodymovin.min');
 
 class ReactBodymovin extends React.Component {
   componentDidMount () {
-    const options = Object.assign({}, this.props.options)
-    options.wrapper = this.wrapper
-    options.renderer = 'svg'
-    this.animation = bodymovin.loadAnimation(options)
+    this.options = Object.assign({}, this.props.options);
+    this.options.wrapper = this.wrapper;
+    this.options.renderer = 'svg';
+    this.animation = bodymovin.loadAnimation(this.options);
+  }
+
+  componentDidUpdate() {
+    this.props.play ? this.play() : this.stop();
+  }
+
+  componentWillUpdate(nextProps) {
+    if (this.options.animationData !== nextProps.options.animationData) {
+      this.destroy();
+      this.options.animationData = nextProps.options.animationData;
+      this.animation = bodymovin.loadAnimation(this.options);
+    }
   }
 
   componentWillUnmount () {
     this.animation.destroy()
   }
 
-  shouldComponentUpdate () {
-    return false
+  play() {
+    this.animation.play();
+  }
+
+  stop() {
+    this.animation.stop();
   }
 
   render () {
-    const storeWrapper = (el) => {
-      this.wrapper = el
-    }
-
-    return <div className='react-bodymovin-container' ref={storeWrapper} />
+    return <div className='react-bodymovin-container' ref={(element) => { this.wrapper = element }} />
   }
 }
+
+ReactBodymovin.defaultProps = {
+  play: false,
+};
+
+ReactBodymovin.propTypes = {
+  play: PropTypes.bool,
+};
 
 module.exports = ReactBodymovin
